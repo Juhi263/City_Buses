@@ -6,6 +6,7 @@ function App() {
   const [buses, setBuses] = useState([]);
   const [page, setPage] = useState(1);
   const [totalFetched, setTotalFetched] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const limit = 10;
 
@@ -17,18 +18,20 @@ function App() {
         : `http://localhost:5000/api/buses?page=${page}&limit=${limit}`;
       const response = await fetch(url);
       const data = await response.json();
-      setBuses(data);
-      setTotalFetched(data.length);
+
+      setBuses(data.data);
+      setTotalFetched(data.data.length);
+      setTotalPages(data.totalPages);
     } catch (err) {
       console.error("Error fetching buses:", err);
     } finally {
       setLoading(false);
     }
   };
-  
 
   useEffect(() => {
     fetchBuses();
+    // eslint-disable-next-line
   }, [page]);
 
   const handleSearch = (e) => {
@@ -69,14 +72,15 @@ function App() {
                   </div>
                 ))}
               </div>
+
               <div className="pagination">
                 <button onClick={() => setPage(page - 1)} disabled={page === 1}>
                   ⬅ Prev
                 </button>
-                <span>Page {page}</span>
+                <span>Page {page} of {totalPages}</span>
                 <button
                   onClick={() => setPage(page + 1)}
-                  disabled={totalFetched < limit}
+                  disabled={page === totalPages}
                 >
                   Next ➡
                 </button>

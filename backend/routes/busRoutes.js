@@ -129,22 +129,30 @@ router.post("/populate", async (req, res) => {
 
 // Search API by location
 router.get("/buses", async (req, res) => {
-    try {
-      const { location, page = 1, limit = 10 } = req.query;
-  
-      const query = location
-        ? { via: { $regex: location, $options: "i" } }
-        : {}; // Fetch all if location is not provided
-  
-      const buses = await Bus.find(query)
-        .skip((page - 1) * limit)
-        .limit(Number(limit));
-  
-      res.json(buses); // always return an array
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
-  });
+  try {
+    const { location, page = 1, limit = 10 } = req.query;
+
+    const query = location
+      ? { via: { $regex: location, $options: "i" } }
+      : {};
+
+    const totalCount = await Bus.countDocuments(query);
+    const totalPages = Math.ceil(totalCount / limit);
+    const buses = await Bus.find(query)
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+
+    res.json({
+      data: buses,
+      currentPage: Number(page),
+      totalPages,
+      totalCount,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
   
 
 module.exports = router;
